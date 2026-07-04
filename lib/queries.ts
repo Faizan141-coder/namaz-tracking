@@ -142,6 +142,7 @@ export type Insights = {
   daysTracked: number; // days with at least one fard logged
   daysSinceStart: number; // calendar days from START_DATE to today
   possibleFard: number; // daysSinceStart * 5
+  remainingFard: number; // possibleFard - totalFard (backlog still to log/make up)
   avgFardPerTrackedDay: number;
   currentStreak: number;
   bestStreak: number;
@@ -227,6 +228,8 @@ export function getInsights(): Insights {
     });
   }
 
+  const possibleFard = daysSinceStart * FARD_KEYS.length;
+
   return {
     totalFard,
     totalSunnah,
@@ -237,7 +240,8 @@ export function getInsights(): Insights {
     daysPartial,
     daysTracked,
     daysSinceStart,
-    possibleFard: daysSinceStart * FARD_KEYS.length,
+    possibleFard,
+    remainingFard: Math.max(0, possibleFard - totalFard),
     avgFardPerTrackedDay,
     currentStreak,
     bestStreak,

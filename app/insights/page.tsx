@@ -27,50 +27,44 @@ export default function InsightsPage() {
         </Link>
       </header>
 
-      {/* headline tiles */}
+      {/* hero: prayed vs. remaining */}
+      <section className="card hero">
+        <div className="hero-stats">
+          <div className="hero-stat">
+            <span className="hero-num">{fmt(ins.totalFard)}</span>
+            <span className="hero-lbl">fard prayed</span>
+          </div>
+          <div className="hero-stat" data-warn>
+            <span className="hero-num">{fmt(ins.remainingFard)}</span>
+            <span className="hero-lbl">still to make up</span>
+          </div>
+          <div className="hero-stat">
+            <span className="hero-num">{lifetimePct}%</span>
+            <span className="hero-lbl">of a lifetime</span>
+          </div>
+        </div>
+        <div className="big-bar">
+          <div className="big-fill" style={{ width: `${lifetimePct}%` }} />
+        </div>
+        <p className="card-note">
+          {fmt(ins.totalFard)} of {fmt(ins.possibleFard)} possible fard across{" "}
+          {fmt(ins.daysSinceStart)} days since {START_DATE}.
+        </p>
+      </section>
+
+      {/* secondary tiles */}
       <div className="tiles">
-        <Tile num={fmt(ins.totalFard)} label="fard prayed" accent />
         <Tile num={fmt(ins.totalSunnah)} label="sunnah" />
         <Tile num={fmt(ins.totalNafl)} label="nafl / witr" />
         <Tile num={fmt(ins.totalAll)} label="total prayers" />
+        <Tile num={fmt(ins.daysComplete)} label="perfect days" />
         <Tile num={String(ins.currentStreak)} label="current streak" />
         <Tile num={String(ins.bestStreak)} label="best streak" />
-        <Tile num={fmt(ins.daysComplete)} label="perfect days" />
-        <Tile num={ins.avgFardPerTrackedDay.toFixed(1)} label="avg fard / active day" />
+        <Tile num={fmt(ins.daysTracked)} label="days tracked" />
+        <Tile num={ins.avgFardPerTrackedDay.toFixed(1)} label="avg / active day" />
       </div>
 
       <div className="cols2">
-        {/* lifetime completion */}
-        <section className="card">
-          <h2 className="card-title">Lifetime completion</h2>
-          <p className="big-pct">{lifetimePct}%</p>
-          <div className="big-bar">
-            <div className="big-fill" style={{ width: `${lifetimePct}%` }} />
-          </div>
-          <p className="card-note">
-            {fmt(ins.totalFard)} of {fmt(ins.possibleFard)} possible fard over{" "}
-            {fmt(ins.daysSinceStart)} days.
-          </p>
-          <ul className="kv">
-            <li>
-              <span>Days tracked</span>
-              <b>{fmt(ins.daysTracked)}</b>
-            </li>
-            <li>
-              <span>Perfect days (5/5)</span>
-              <b>{fmt(ins.daysComplete)}</b>
-            </li>
-            <li>
-              <span>Partial days (1–4)</span>
-              <b>{fmt(ins.daysPartial)}</b>
-            </li>
-            <li>
-              <span>Days still to log</span>
-              <b>{fmt(Math.max(0, ins.daysSinceStart - ins.daysTracked))}</b>
-            </li>
-          </ul>
-        </section>
-
         {/* all-time by prayer */}
         <section className="card">
           <h2 className="card-title">All-time by prayer</h2>
@@ -91,6 +85,33 @@ export default function InsightsPage() {
           </div>
           <p className="card-note">Bars show completion vs. every day since {START_DATE}.</p>
         </section>
+
+        {/* breakdown */}
+        <section className="card">
+          <h2 className="card-title">Day breakdown</h2>
+          <ul className="kv">
+            <li>
+              <span>Days tracked</span>
+              <b>{fmt(ins.daysTracked)}</b>
+            </li>
+            <li>
+              <span>Perfect days (5/5)</span>
+              <b>{fmt(ins.daysComplete)}</b>
+            </li>
+            <li>
+              <span>Partial days (1–4)</span>
+              <b>{fmt(ins.daysPartial)}</b>
+            </li>
+            <li>
+              <span>Days still to log</span>
+              <b>{fmt(Math.max(0, ins.daysSinceStart - ins.daysTracked))}</b>
+            </li>
+            <li>
+              <span>Total days since start</span>
+              <b>{fmt(ins.daysSinceStart)}</b>
+            </li>
+          </ul>
+        </section>
       </div>
 
       {/* per-year table */}
@@ -99,20 +120,23 @@ export default function InsightsPage() {
         <div className="ytable">
           <div className="yrow yhead">
             <span>Year</span>
-            <span className="ynum">Fard</span>
-            <span className="ynum">Perfect days</span>
+            <span className="ynum">Prayed</span>
+            <span className="ynum">Left</span>
+            <span className="ynum yperfect">Perfect</span>
             <span className="ybar-h">Completion</span>
             <span className="ynum">%</span>
           </div>
           {ins.byYear.map((y) => {
             const possibleFard = y.possibleDays * 5;
+            const left = Math.max(0, possibleFard - y.fard);
             const pct = possibleFard > 0 ? Math.round((y.fard / possibleFard) * 100) : 0;
             const barW = Math.round((y.fard / maxYearFard) * 100);
             return (
               <div key={y.year} className="yrow">
                 <span className="yyear">{y.year}</span>
                 <span className="ynum">{fmt(y.fard)}</span>
-                <span className="ynum">{fmt(y.completeDays)}</span>
+                <span className="ynum yleft">{fmt(left)}</span>
+                <span className="ynum yperfect">{fmt(y.completeDays)}</span>
                 <span className="ybar">
                   <span className="ybar-fill" style={{ width: `${barW}%` }} />
                 </span>
@@ -126,9 +150,9 @@ export default function InsightsPage() {
   );
 }
 
-function Tile({ num, label, accent }: { num: string; label: string; accent?: boolean }) {
+function Tile({ num, label }: { num: string; label: string }) {
   return (
-    <div className="tile" data-accent={accent ? "" : undefined}>
+    <div className="tile">
       <span className="tile-num">{num}</span>
       <span className="tile-lbl">{label}</span>
     </div>
